@@ -1,19 +1,21 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, img)
-import Html.Attributes exposing (src)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (onClick, onInput)
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    {}
+    { content : String
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( { content = "Test" }, Cmd.none )
 
 
 
@@ -21,13 +23,13 @@ init =
 
 
 type Msg
-    = NoOp
-
+  = Change String
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
-
+  case msg of
+    Change newContent ->
+      ( { model | content = newContent }, Cmd.none )
 
 
 ---- VIEW ----
@@ -36,8 +38,9 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ img [ src "/logo.svg" ] []
-        , div [] [ text "Your Elm App is working!" ]
+        [ div [] [ text "Search users names:"]
+        , input [ placeholder "omegaphoenix", onInput Change] []
+        , button [ onClick NoOp ] [text "Submit"]
         ]
 
 

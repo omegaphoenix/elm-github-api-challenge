@@ -23,11 +23,14 @@ init =
 
 
 type Msg
-  = Change String
+  = NoOp
+  | Change String
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
+    NoOp ->
+      ( { model | content = "" }, Cmd.none )
     Change newContent ->
       ( { model | content = newContent }, Cmd.none )
 
@@ -39,7 +42,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ div [] [ text "Search users names:"]
-        , input [ placeholder "omegaphoenix", onInput Change] []
+        , input [ placeholder "e.g. omegaphoenix", onInput Change] []
         , button [ onClick NoOp ] [text "Submit"]
         ]
 

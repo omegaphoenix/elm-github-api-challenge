@@ -10,7 +10,7 @@ import Html.Events exposing (onClick, onInput)
 
 type alias Model =
     { content : String
-    , user : User
+    , users : List User
     }
 
 type alias User =
@@ -23,9 +23,9 @@ type alias User =
 init : ( Model, Cmd Msg )
 init =
     ( { content = "Test"
-      , user = { username =  "omegaphoenix"
+      , users = [{ username =  "omegaphoenix"
                , avatar_url = "https://avatars1.githubusercontent.com/u/10361461?v=3"
-               }
+               }]
       }
       , Cmd.none )
 
@@ -59,10 +59,17 @@ view model =
         [ div [] [ text "Search users names:"]
         , input [ placeholder "e.g. omegaphoenix", onInput Change] []
         , button [ onClick NoOp ] [text "Submit"]
-        , img [ src model.user.avatar_url ] []
+        , renderUsers model.users
         ]
 
 
+picStyle : Attribute msg
+picStyle = style [ ( "display", "block" ), ( "margin", "0 auto") ]
+
+renderUsers : List User -> Html Msg
+renderUsers users =
+    ul []
+        (List.map (\user -> li [] [ img [ src user.avatar_url ] [] ]) users)
 
 ---- PROGRAM ----
 

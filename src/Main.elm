@@ -10,12 +10,24 @@ import Html.Events exposing (onClick, onInput)
 
 type alias Model =
     { content : String
+    , user : User
     }
+
+type alias User =
+    { username : String
+    , avatar_url : String
+    }
+
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { content = "Test" }, Cmd.none )
+    ( { content = "Test"
+      , user = { username =  "omegaphoenix"
+               , avatar_url = "https://avatars1.githubusercontent.com/u/10361461?v=3"
+               }
+      }
+      , Cmd.none )
 
 
 
@@ -25,6 +37,7 @@ init =
 type Msg
   = NoOp
   | Change String
+  | Submit String
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -33,6 +46,8 @@ update msg model =
       ( { model | content = "" }, Cmd.none )
     Change newContent ->
       ( { model | content = newContent }, Cmd.none )
+    Submit username ->
+      ( { model | content = username }, Cmd.none )
 
 
 ---- VIEW ----
@@ -44,6 +59,7 @@ view model =
         [ div [] [ text "Search users names:"]
         , input [ placeholder "e.g. omegaphoenix", onInput Change] []
         , button [ onClick NoOp ] [text "Submit"]
+        , img [ src model.user.avatar_url ] []
         ]
 
 

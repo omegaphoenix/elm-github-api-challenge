@@ -3,6 +3,8 @@ module Main exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
+import Http exposing (get, send)
+import Json.Decode as JD exposing (Decoder, field, map2, string, succeed)
 
 
 ---- MODEL ----
@@ -14,7 +16,7 @@ type alias Model =
     }
 
 type alias User =
-    { username : String
+    { login : String
     , avatar_url : String
     }
 
@@ -23,9 +25,7 @@ type alias User =
 init : ( Model, Cmd Msg )
 init =
     ( { content = "Test"
-      , users = [{ username =  "omegaphoenix"
-               , avatar_url = "https://avatars1.githubusercontent.com/u/10361461?v=3"
-               }]
+      , users = []
       }
       , Cmd.none )
 
@@ -37,7 +37,8 @@ init =
 type Msg
   = NoOp
   | Change String
-  | Submit String
+  | Submit
+  | Update (Result Http.Error (List User))
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -46,9 +47,31 @@ update msg model =
       ( { model | content = "" }, Cmd.none )
     Change newContent ->
       ( { model | content = newContent }, Cmd.none )
-    Submit username ->
-      ( { model | content = username }, Cmd.none )
+    Submit ->
+      ( model, lookupUsers model.content )
+    Update (Ok res) ->
+      ( { model | users = res }, Cmd.none )
+    Update (Err _) ->
+      ( model, Cmd.none )
 
+lookupUsers : String -> Cmd Msg
+lookupUsers query =
+  requestUsers query
+  |> Http.send Update
+
+requestUsers : String -> Http.Request (List User)
+requestUsers query =
+  Http.get ("https://api.github.com/search/users?q=" ++ query) userListDecoder
+
+userListDecoder : JD.Decoder (List User)
+userListDecoder =
+  JD.list userDecoder
+
+userDecoder : JD.Decoder User
+userDecoder =
+  JD.map2 User
+    (JD.field "login" JD.string)
+    (JD.field "avatar_url" JD.string)
 
 ---- VIEW ----
 
@@ -58,7 +81,7 @@ view model =
     div []
         [ div [] [ text "Search users names:"]
         , input [ placeholder "e.g. omegaphoenix", onInput Change] []
-        , button [ onClick NoOp ] [text "Submit"]
+        , button [ onClick Submit ] [text "Submit"]
         , renderUsers model.users
         ]
 

@@ -51,7 +51,9 @@ update msg model =
       ( model, lookupUsers model.content )
     Update (Ok res) ->
       ( { model | users = res }, Cmd.none )
-    Update (Err _) ->
+    Update (Err something) ->
+      let _ = Debug.log "" something
+      in
       ( model, Cmd.none )
 
 lookupUsers : String -> Cmd Msg
@@ -61,7 +63,7 @@ lookupUsers query =
 
 requestUsers : String -> Http.Request (List User)
 requestUsers query =
-  Http.get ("https://api.github.com/search/users?q=" ++ query) userListDecoder
+  Http.get ("https://api.github.com/search/users?q=" ++ query) (field "items" userListDecoder)
 
 userListDecoder : JD.Decoder (List User)
 userListDecoder =
@@ -86,13 +88,10 @@ view model =
         ]
 
 
-picStyle : Attribute msg
-picStyle = style [ ( "display", "block" ), ( "margin", "0 auto") ]
-
 renderUsers : List User -> Html Msg
 renderUsers users =
-    ul []
-        (List.map (\user -> li [] [ img [ src user.avatar_url ] [] ]) users)
+    div [Html.Attributes.class "user-avatars"]
+        (List.map (\user -> img [ src user.avatar_url ] []) users)
 
 ---- PROGRAM ----
 

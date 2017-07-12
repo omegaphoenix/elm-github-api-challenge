@@ -11,21 +11,28 @@ import Json.Decode as JD exposing (Decoder, field, map2, string, succeed)
 
 
 type alias Model =
-    { content : String
-    , users : List User
-    }
+  { content : String
+  , users : List User
+  , repos : List Repo
+  }
 
 type alias User =
-    { login : String
-    , avatar_url : String
-    }
+  { login : String
+  , avatar_url : String
+  }
 
+type alias Repo =
+  { name : String
+  , watchers_count : Int
+  , language : String
+  }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { content = "Test"
+    ( { content = ""
       , users = []
+      , repos = []
       }
       , Cmd.none )
 
@@ -39,6 +46,7 @@ type Msg
   | Change String
   | Submit
   | Update (Result Http.Error (List User))
+  | UpdateRepos (Result Http.Error (List Repo))
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -52,6 +60,12 @@ update msg model =
     Update (Ok res) ->
       ( { model | users = res }, Cmd.none )
     Update (Err something) ->
+      let _ = Debug.log "" something
+      in
+      ( model, Cmd.none )
+    UpdateRepos (Ok res) ->
+      ( { model | repos = res }, Cmd.none )
+    UpdateRepos (Err something) ->
       let _ = Debug.log "" something
       in
       ( model, Cmd.none )
@@ -75,6 +89,26 @@ userDecoder =
     (JD.field "login" JD.string)
     (JD.field "avatar_url" JD.string)
 
+lookupRepos : String -> Cmd Msg
+lookupRepos query =
+  requestRepos query
+  |> Http.send UpdateRepos
+
+requestRepos : String -> Http.Request (List Repo)
+requestRepos query =
+  Http.get ("https://api.github.com/users/" ++ query ++ "/repos") (field "items" repoListDecoder)
+
+repoListDecoder : JD.Decoder (List Repo)
+repoListDecoder =
+  JD.list repoDecoder
+
+repoDecoder : JD.Decoder Repo
+repoDecoder =
+  JD.map3 Repo
+    (JD.field "name" JD.string)
+    (JD.field "watchers_count" JD.int)
+    (JD.field "language" JD.string)
+
 ---- VIEW ----
 
 
@@ -92,6 +126,7 @@ renderUsers : List User -> Html Msg
 renderUsers users =
     div [Html.Attributes.class "user-avatars"]
         (List.map (\user -> img [ src user.avatar_url ] []) users)
+
 
 ---- PROGRAM ----
 

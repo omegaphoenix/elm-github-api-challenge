@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http exposing (get, send)
 import Json.Decode as JD exposing (Decoder, field, map2, nullable, string, succeed)
+import Json.Decode.Pipeline as JDP exposing (decode, required, optional)
 
 
 ---- MODEL ----
@@ -24,8 +25,8 @@ type alias User =
 type alias Repo =
   { name : String
   , html_url : String
-  , watchers_count : Int
-  , language : (Maybe String)
+  , watchers: Int
+  , language : String
   }
 
 
@@ -91,9 +92,9 @@ userListDecoder =
 
 userDecoder : JD.Decoder User
 userDecoder =
-  JD.map2 User
-    (JD.field "login" JD.string)
-    (JD.field "avatar_url" JD.string)
+  JDP.decode User
+      |> JDP.required "login" (JD.string)
+      |> JDP.required "avatar_url" (JD.string)
 
 lookupRepos : String -> Cmd Msg
 lookupRepos query =
@@ -110,11 +111,11 @@ repoListDecoder =
 
 repoDecoder : JD.Decoder Repo
 repoDecoder =
-  JD.map4 Repo
-    (JD.field "name" JD.string)
-    (JD.field "html_url" JD.string)
-    (JD.field "watchers_count" JD.int)
-    (JD.field "language" (JD.nullable JD.string))
+    JDP.decode Repo
+        |> JDP.required "name" (JD.string)
+        |> JDP.required "html_url" (JD.string)
+        |> JDP.required "watchers" (JD.int)
+        |> JDP.optional "language" (JD.string) ""
 
 
 
@@ -138,13 +139,25 @@ renderUsers users =
         (List.map (\user ->
           img [ onClick (SubmitUser user.login)
               , src user.avatar_url ]
-          []) users)
+              []
+          ) users)
 
 
 renderRepos : List Repo -> Html Msg
 renderRepos repos =
     div [Html.Attributes.class "user-repos"]
-        (List.map (\repos -> div [] [ text repos.name ] ) repos)
+        (List.map (\repo ->
+          viewLink repo
+          ) repos)
+
+viewLink : Repo -> Html msg
+viewLink repo =
+  div []
+    [ a [ href (repo.html_url) ] [ text repo.name ]
+    , h1 [] [ text ("Primary language: " ++ repo.language) ]
+    , h1 [] [ text ("Watchers:") ]
+    ]
+
 
 
 

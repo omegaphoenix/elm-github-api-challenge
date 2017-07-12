@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http exposing (get, send)
-import Json.Decode as JD exposing (Decoder, field, map2, string, succeed)
+import Json.Decode as JD exposing (Decoder, field, map2, nullable, string, succeed)
 
 
 ---- MODEL ----
@@ -23,16 +23,19 @@ type alias User =
 
 type alias Repo =
   { name : String
+  , html_url : String
   , watchers_count : Int
-  , language : String
+  , language : (Maybe String)
   }
 
 
 init : ( Model, Cmd Msg )
 init =
     ( { content = ""
-      , users = []
-      , repos = []
+      , users = [
+        ]
+      , repos = [
+        ]
       }
       , Cmd.none )
 
@@ -45,6 +48,7 @@ type Msg
   = NoOp
   | Change String
   | Submit
+  | SubmitUser String
   | Update (Result Http.Error (List User))
   | UpdateRepos (Result Http.Error (List Repo))
 
@@ -57,6 +61,8 @@ update msg model =
       ( { model | content = newContent }, Cmd.none )
     Submit ->
       ( model, lookupUsers model.content )
+    SubmitUser login ->
+      ( model, lookupRepos login )
     Update (Ok res) ->
       ( { model | users = res }, Cmd.none )
     Update (Err something) ->
@@ -96,7 +102,7 @@ lookupRepos query =
 
 requestRepos : String -> Http.Request (List Repo)
 requestRepos query =
-  Http.get ("https://api.github.com/users/" ++ query ++ "/repos") (field "items" repoListDecoder)
+  Http.get ("https://api.github.com/users/" ++ query ++ "/repos") repoListDecoder
 
 repoListDecoder : JD.Decoder (List Repo)
 repoListDecoder =
@@ -104,10 +110,13 @@ repoListDecoder =
 
 repoDecoder : JD.Decoder Repo
 repoDecoder =
-  JD.map3 Repo
+  JD.map4 Repo
     (JD.field "name" JD.string)
+    (JD.field "html_url" JD.string)
     (JD.field "watchers_count" JD.int)
-    (JD.field "language" JD.string)
+    (JD.field "language" (JD.nullable JD.string))
+
+
 
 ---- VIEW ----
 
@@ -119,13 +128,24 @@ view model =
         , input [ placeholder "e.g. omegaphoenix", onInput Change] []
         , button [ onClick Submit ] [text "Submit"]
         , renderUsers model.users
+        , renderRepos model.repos
         ]
 
 
 renderUsers : List User -> Html Msg
 renderUsers users =
     div [Html.Attributes.class "user-avatars"]
-        (List.map (\user -> img [ src user.avatar_url ] []) users)
+        (List.map (\user ->
+          img [ onClick (SubmitUser user.login)
+              , src user.avatar_url ]
+          []) users)
+
+
+renderRepos : List Repo -> Html Msg
+renderRepos repos =
+    div [Html.Attributes.class "user-repos"]
+        (List.map (\repos -> div [] [ text repos.name ] ) repos)
+
 
 
 ---- PROGRAM ----

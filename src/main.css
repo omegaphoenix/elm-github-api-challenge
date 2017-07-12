@@ -13,3 +13,7 @@ img {
 .user-avatars {
   line-height: 0;
 }
+
+.user-repos {
+  line-height: 1;
+}

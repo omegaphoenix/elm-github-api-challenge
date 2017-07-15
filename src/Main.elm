@@ -23,6 +23,8 @@ type alias Model =
   , users : List User
   , repos : List Repo
   , route : Route
+  , client_id: String
+  , client_secret: String
   }
 
 type alias User =
@@ -37,15 +39,21 @@ type alias Repo =
   , language : String
   }
 
+type alias Flags =
+  { client_id : String
+  , client_secret : String
+  }
 
-init : ( Model, Cmd Msg )
-init =
+init : Flags -> ( Model, Cmd Msg )
+init flags =
     ( { content = ""
       , users = [
         ]
       , repos = [
         ]
       , route = UsersRoute
+      , client_id = flags.client_id
+      , client_secret = flags.client_secret
       }
       , Cmd.none )
 
@@ -156,13 +164,11 @@ page model =
         NotFoundRoute ->
             notFoundView
 
-
 notFoundView : Html msg
 notFoundView =
     div []
         [ text "Not found"
         ]
-
 
 renderUsers : List User -> Html Msg
 renderUsers users =
@@ -172,7 +178,6 @@ renderUsers users =
               , src user.avatar_url ]
               []
           ) users)
-
 
 renderRepos : List Repo -> Html Msg
 renderRepos repos =
@@ -195,9 +200,9 @@ viewLink repo =
 ---- PROGRAM ----
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { view = view
         , init = init
         , update = update

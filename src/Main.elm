@@ -6,6 +6,13 @@ import Html.Events exposing (onClick, onInput)
 import Http exposing (get, send)
 import Json.Decode as JD exposing (Decoder, field, map2, nullable, string, succeed)
 import Json.Decode.Pipeline as JDP exposing (decode, required, optional)
+import UrlParser as  URL exposing (..)
+
+
+type Route
+  = UsersRoute
+  | ReposRoute String
+  | NotFoundRoute
 
 
 ---- MODEL ----
@@ -15,6 +22,7 @@ type alias Model =
   { content : String
   , users : List User
   , repos : List Repo
+  , route : Route
   }
 
 type alias User =
@@ -37,6 +45,7 @@ init =
         ]
       , repos = [
         ]
+      , route = UsersRoute
       }
       , Cmd.none )
 
@@ -61,7 +70,7 @@ update msg model =
     Change newContent ->
       ( { model | content = newContent }, Cmd.none )
     Submit ->
-      ( model, lookupUsers model.content )
+      ( { model | route = UsersRoute }, lookupUsers model.content )
     SubmitUser login ->
       ( model, lookupRepos login )
     Update (Ok res) ->
@@ -71,7 +80,7 @@ update msg model =
       in
       ( model, Cmd.none )
     UpdateRepos (Ok res) ->
-      ( { model | repos = res }, Cmd.none )
+      ( { model | repos = res, route = ReposRoute "" }, Cmd.none )
     UpdateRepos (Err something) ->
       let _ = Debug.log "" something
       in
@@ -117,6 +126,12 @@ repoDecoder =
         |> JDP.required "watchers" (JD.int)
         |> JDP.optional "language" (JD.string) ""
 
+matchers : Parser (Route -> a) a
+matchers =
+    oneOf
+        [ URL.map UsersRoute top
+        , URL.map ReposRoute (URL.s "users" </> URL.string)
+        ]
 
 
 ---- VIEW ----
@@ -128,8 +143,24 @@ view model =
         [ div [] [ text "Search users names:"]
         , input [ placeholder "e.g. omegaphoenix", onInput Change] []
         , button [ onClick Submit ] [text "Submit"]
-        , renderUsers model.users
-        , renderRepos model.repos
+        , page model
+        ]
+
+page : Model -> Html Msg
+page model =
+    case model.route of
+        UsersRoute ->
+            renderUsers model.users
+        ReposRoute id ->
+            renderRepos model.repos
+        NotFoundRoute ->
+            notFoundView
+
+
+notFoundView : Html msg
+notFoundView =
+    div []
+        [ text "Not found"
         ]
 
 

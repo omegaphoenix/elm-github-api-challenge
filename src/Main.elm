@@ -6,7 +6,6 @@ import Html.Events exposing (onClick, onInput)
 import Http exposing (get, send)
 import Json.Decode as JD exposing (Decoder, field, map2, nullable, string, succeed)
 import Json.Decode.Pipeline as JDP exposing (decode, optional, required)
-import Json.Encode as JE exposing (encode)
 import UrlParser as  URL exposing (..)
 
 
@@ -24,7 +23,7 @@ type alias Model =
   , users : List User
   , repos : List Repo
   , route : Route
-  , client_info: JE.Value
+  , client_info: Flags
   }
 
 type alias User =
@@ -52,7 +51,7 @@ init flags =
       , repos = [
         ]
       , route = UsersRoute
-      , client_info = JE.object [("client_id", JE.string flags.client_id), ("client_secret", JE.string flags.client_secret)]
+      , client_info = flags
       }
       , Cmd.none )
 
@@ -93,14 +92,14 @@ update msg model =
       in
       ( model, Cmd.none )
 
-lookupUsers : String -> JE.Value -> Cmd Msg
+lookupUsers : String -> Flags -> Cmd Msg
 lookupUsers query client_info =
   requestUsers query client_info
   |> Http.send Update
 
-requestUsers : String -> JE.Value -> Http.Request (List User)
+requestUsers : String -> Flags -> Http.Request (List User)
 requestUsers query client_info =
-  Http.get ("https://api.github.com/search/users?q=" ++ query) (field "items" userListDecoder)
+  Http.get ("https://api.github.com/search/users?q=" ++ query ++ "&" ++ (convertClientInfo client_info)) (field "items" userListDecoder)
 
 userListDecoder : JD.Decoder (List User)
 userListDecoder =
@@ -112,14 +111,18 @@ userDecoder =
       |> JDP.required "login" (JD.string)
       |> JDP.required "avatar_url" (JD.string)
 
-lookupRepos : String -> JE.Value -> Cmd Msg
+lookupRepos : String -> Flags -> Cmd Msg
 lookupRepos query client_info =
   requestRepos query client_info
   |> Http.send UpdateRepos
 
-requestRepos : String -> JE.Value -> Http.Request (List Repo)
+requestRepos : String -> Flags -> Http.Request (List Repo)
 requestRepos query client_info =
-  Http.get ("https://api.github.com/users/" ++ query ++ "/repos?" ++ (JE.encode 0 client_info)) repoListDecoder
+  Http.get ("https://api.github.com/users/" ++ query ++ "/repos?" ++ (convertClientInfo client_info)) repoListDecoder
+
+convertClientInfo : Flags -> String
+convertClientInfo client_info =
+  "client_id=" ++ client_info.client_id ++ "&client_secret=" ++ client_info.client_secret
 
 repoListDecoder : JD.Decoder (List Repo)
 repoListDecoder =

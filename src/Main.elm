@@ -99,7 +99,7 @@ lookupUsers query client_info =
 
 requestUsers : String -> Flags -> Http.Request (List User)
 requestUsers query client_info =
-  Http.get ("https://api.github.com/search/users?q=" ++ query ++ "&" ++ (convertClientInfo client_info)) (field "items" userListDecoder)
+  Http.get ("https://api.github.com/search/users?q=" ++ query ++ (convertClientInfo client_info)) (field "items" userListDecoder)
 
 userListDecoder : JD.Decoder (List User)
 userListDecoder =
@@ -122,7 +122,7 @@ requestRepos query client_info =
 
 convertClientInfo : Flags -> String
 convertClientInfo client_info =
-  "client_id=" ++ client_info.client_id ++ "&client_secret=" ++ client_info.client_secret
+  "&client_id=" ++ client_info.client_id ++ "&client_secret=" ++ client_info.client_secret
 
 repoListDecoder : JD.Decoder (List Repo)
 repoListDecoder =
@@ -193,8 +193,21 @@ viewLink repo =
   div []
     [ a [ href (repo.html_url) ] [ text repo.name ]
     , h1 [] [ text ("Primary language: " ++ repo.language) ]
-    , h1 [] [ text ("Watchers:") ]
+    , h1 [] [ text ("Watchers: " ++ (showWatchers repo.watchers)) ]
     ]
+
+showWatchers : Int -> String
+showWatchers numWatchers =
+  showWatchersHelper numWatchers ""
+
+showWatchersHelper : Int -> String -> String
+showWatchersHelper numWatchers str =
+  case numWatchers of
+    0 ->
+      str
+    n ->
+      "😀" ++ (showWatchersHelper (n - 1) str)
+
 
 
 ---- PROGRAM ----

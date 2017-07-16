@@ -206,7 +206,27 @@ showWatchersHelper numWatchers str =
     0 ->
       str
     n ->
-      "😀" ++ (showWatchersHelper (n - 1) str)
+      case (n >= 100000) of
+        True ->
+          "💣" ++ (showWatchersHelper (n - 100000) str)
+        False ->
+          case (n >= 10000) of
+            True ->
+              "🏀" ++ (showWatchersHelper (n - 10000) str)
+            False ->
+              case (n >= 1000) of
+                True ->
+                  "👑" ++ (showWatchersHelper (n - 1000) str)
+                False ->
+                  case (n >= 100) of
+                    True ->
+                      "💯" ++ (showWatchersHelper (n - 100) str)
+                    False ->
+                      case (n >= 10) of
+                        True ->
+                          "🔟" ++ (showWatchersHelper (n - 10) str)
+                        False ->
+                          "🔥" ++ (showWatchersHelper (n - 1) str)
 
 
 

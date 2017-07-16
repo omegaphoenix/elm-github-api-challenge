@@ -5,7 +5,8 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http exposing (get, send)
 import Json.Decode as JD exposing (Decoder, field, map2, nullable, string, succeed)
-import Json.Decode.Pipeline as JDP exposing (decode, required, optional)
+import Json.Decode.Pipeline as JDP exposing (decode, optional, required)
+import Json.Encode as JE exposing (encode)
 import UrlParser as  URL exposing (..)
 
 
@@ -23,8 +24,7 @@ type alias Model =
   , users : List User
   , repos : List Repo
   , route : Route
-  , client_id: String
-  , client_secret: String
+  , client_info: JE.Value
   }
 
 type alias User =
@@ -52,8 +52,7 @@ init flags =
       , repos = [
         ]
       , route = UsersRoute
-      , client_id = flags.client_id
-      , client_secret = flags.client_secret
+      , client_info = JE.object [("client_id", JE.string flags.client_id), ("client_secret", JE.string flags.client_secret)]
       }
       , Cmd.none )
 
@@ -78,9 +77,9 @@ update msg model =
     Change newContent ->
       ( { model | content = newContent }, Cmd.none )
     Submit ->
-      ( { model | route = UsersRoute }, lookupUsers model.content )
+      ( { model | route = UsersRoute }, lookupUsers model.content model.client_info )
     SubmitUser login ->
-      ( model, lookupRepos login )
+      ( model, lookupRepos login model.client_info )
     Update (Ok res) ->
       ( { model | users = res }, Cmd.none )
     Update (Err something) ->
@@ -94,13 +93,13 @@ update msg model =
       in
       ( model, Cmd.none )
 
-lookupUsers : String -> Cmd Msg
-lookupUsers query =
-  requestUsers query
+lookupUsers : String -> JE.Value -> Cmd Msg
+lookupUsers query client_info =
+  requestUsers query client_info
   |> Http.send Update
 
-requestUsers : String -> Http.Request (List User)
-requestUsers query =
+requestUsers : String -> JE.Value -> Http.Request (List User)
+requestUsers query client_info =
   Http.get ("https://api.github.com/search/users?q=" ++ query) (field "items" userListDecoder)
 
 userListDecoder : JD.Decoder (List User)
@@ -113,14 +112,14 @@ userDecoder =
       |> JDP.required "login" (JD.string)
       |> JDP.required "avatar_url" (JD.string)
 
-lookupRepos : String -> Cmd Msg
-lookupRepos query =
-  requestRepos query
+lookupRepos : String -> JE.Value -> Cmd Msg
+lookupRepos query client_info =
+  requestRepos query client_info
   |> Http.send UpdateRepos
 
-requestRepos : String -> Http.Request (List Repo)
-requestRepos query =
-  Http.get ("https://api.github.com/users/" ++ query ++ "/repos") repoListDecoder
+requestRepos : String -> JE.Value -> Http.Request (List Repo)
+requestRepos query client_info =
+  Http.get ("https://api.github.com/users/" ++ query ++ "/repos?" ++ (JE.encode 0 client_info)) repoListDecoder
 
 repoListDecoder : JD.Decoder (List Repo)
 repoListDecoder =
@@ -193,8 +192,6 @@ viewLink repo =
     , h1 [] [ text ("Primary language: " ++ repo.language) ]
     , h1 [] [ text ("Watchers:") ]
     ]
-
-
 
 
 ---- PROGRAM ----

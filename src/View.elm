@@ -22,9 +22,11 @@ view model =
 page : Model -> Html Msg
 page model =
     case model.route of
+        SearchRoute ->
+            renderUsers model.users
         UsersRoute ->
             renderUsers model.users
-        ReposRoute id ->
+        ReposRoute ->
             renderRepos model.repos
         NotFoundRoute ->
             notFoundView

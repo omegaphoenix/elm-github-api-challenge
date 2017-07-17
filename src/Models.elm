@@ -1,6 +1,7 @@
 module Models exposing (..)
 
 import Http exposing (Error)
+import Navigation exposing (Location)
 
 
 ---- MODEL ----
@@ -32,8 +33,9 @@ type alias Flags =
   }
 
 type Route
-  = UsersRoute
-  | ReposRoute String
+  = SearchRoute
+  | UsersRoute
+  | ReposRoute
   | NotFoundRoute
 
 type Msg
@@ -43,3 +45,15 @@ type Msg
   | SubmitUser String
   | Update (Result Http.Error (List User))
   | UpdateRepos (Result Http.Error (List Repo))
+  | OnLocationChange Location
+
+initialModel : Flags -> Route -> Model
+initialModel flags route =
+  { content = ""
+  , users = [
+    ]
+  , repos = [
+    ]
+  , route = route
+  , client_info = flags
+  }

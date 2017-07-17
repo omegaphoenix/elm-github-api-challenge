@@ -3,9 +3,9 @@ module Update exposing (..)
 import Http exposing (get, send)
 import Json.Decode as JD exposing (Decoder, field, map2, nullable, string, succeed)
 import Json.Decode.Pipeline as JDP exposing (decode, optional, required)
-import UrlParser as  URL exposing (..)
 
 import Models exposing (..)
+import Routing exposing (parseLocation)
 
 
 ---- UPDATE ----
@@ -29,11 +29,17 @@ update msg model =
       in
       ( model, Cmd.none )
     UpdateRepos (Ok res) ->
-      ( { model | repos = res, route = ReposRoute "" }, Cmd.none )
+      ( { model | repos = res, route = ReposRoute }, Cmd.none )
     UpdateRepos (Err something) ->
       let _ = Debug.log "" something
       in
       ( model, Cmd.none )
+    OnLocationChange location ->
+      let
+          newRoute =
+            parseLocation location
+      in
+          ( { model | route = newRoute }, Cmd.none )
 
 lookupUsers : String -> Flags -> Cmd Msg
 lookupUsers query client_info =
@@ -77,10 +83,3 @@ repoDecoder =
         |> JDP.required "html_url" (JD.string)
         |> JDP.required "watchers" (JD.int)
         |> JDP.optional "language" (JD.string) ""
-
-matchers : Parser (Route -> a) a
-matchers =
-    oneOf
-        [ URL.map UsersRoute top
-        , URL.map ReposRoute (URL.s "users" </> URL.string)
-        ]

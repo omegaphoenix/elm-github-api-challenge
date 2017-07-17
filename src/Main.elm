@@ -1,8 +1,9 @@
 module Main exposing (..)
 
-import Html exposing (..)
+import Navigation as Nav exposing (Location, programWithFlags)
 
 import Models exposing (..)
+import Routing exposing (..)
 import Update exposing (..)
 import View exposing (..)
 
@@ -10,21 +11,17 @@ import View exposing (..)
 ---- PROGRAM ----
 
 
-init : Flags -> ( Model, Cmd Msg )
-init flags =
-    ( { content = ""
-      , users = [
-        ]
-      , repos = [
-        ]
-      , route = UsersRoute
-      , client_info = flags
-      }
-      , Cmd.none )
+init : Flags -> Nav.Location -> ( Model, Cmd Msg )
+init flags location =
+  let
+      currentRoute =
+        Routing.parseLocation location
+  in
+      ( initialModel flags currentRoute, Cmd.none )
 
 main : Program Flags Model Msg
 main =
-    Html.programWithFlags
+    Nav.programWithFlags Models.OnLocationChange
         { view = view
         , init = init
         , update = update

@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 
 import Models exposing (..)
+import Routing exposing (..)
 
 
 ---- VIEW ----
@@ -12,18 +13,13 @@ import Models exposing (..)
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div [] [ text "Search users names:"]
-        , input [ placeholder "e.g. omegaphoenix", onInput Change] []
-        , button [ onClick Submit ] [text "Submit"]
-        , page model
-        ]
+  page model
 
 page : Model -> Html Msg
 page model =
     case model.route of
         SearchRoute ->
-            renderUsers model.users
+            render
         UsersRoute ->
             renderUsers model.users
         ReposRoute ->
@@ -37,8 +33,24 @@ notFoundView =
         [ text "Not found"
         ]
 
+render: Html Msg
+render =
+    div []
+        [ div [] [ text "Search users names:"]
+        , input [ placeholder "e.g. omegaphoenix", onInput Change] []
+        , button [ onClick Submit ] [text "Submit"]
+        ]
+
 renderUsers : List User -> Html Msg
 renderUsers users =
+    div []
+        [ renderUsersHelper users
+        , searchBtn
+        , listReposBtn
+        ]
+
+renderUsersHelper : List User -> Html Msg
+renderUsersHelper users =
     div [Html.Attributes.class "user-avatars"]
         (List.map (\user ->
           img [ onClick (SubmitUser user.login)
@@ -48,6 +60,14 @@ renderUsers users =
 
 renderRepos : List Repo -> Html Msg
 renderRepos repos =
+    div []
+        [ renderReposHelper repos
+        , searchBtn
+        , listUsersBtn
+        ]
+
+renderReposHelper : List Repo -> Html Msg
+renderReposHelper repos =
     div [Html.Attributes.class "user-repos"]
         (List.map (\repo ->
           viewLink repo
@@ -92,3 +112,27 @@ showWatchersHelper numWatchers str =
                           "🔟" ++ (showWatchersHelper (n - 10) str)
                         False ->
                           "🔥" ++ (showWatchersHelper (n - 1) str)
+
+searchBtn : Html Msg
+searchBtn =
+    a
+        [ class "btn regular"
+        , href ""
+        ]
+        [ i [ class "fa fa-chevron-left mr1" ] [], text "Back to Search" ]
+
+listUsersBtn : Html Msg
+listUsersBtn =
+    a
+        [ class "btn regular"
+        , href usersPath
+        ]
+        [ i [ class "fa fa-chevron-left mr1" ] [], text "Back to Users Search" ]
+
+listReposBtn : Html Msg
+listReposBtn =
+    a
+        [ class "btn regular"
+        , href reposPath
+        ]
+        [ i [ class "fa fa-chevron-left mr1" ] [], text "Back to User Repositories" ]

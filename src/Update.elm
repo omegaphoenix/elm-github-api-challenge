@@ -19,7 +19,7 @@ update msg model =
     Change newContent ->
       ( { model | content = newContent }, Cmd.none )
     Submit ->
-      ( { model | route = UsersRoute }, lookupUsers model.content model.client_info )
+      ( { model | route = UsersRoute, current_user = model.content }, lookupUsers model.content model.client_info )
     SubmitUser login ->
       ( model, lookupRepos login model.client_info )
     Update (Ok res) ->

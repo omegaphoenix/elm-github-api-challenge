@@ -12,6 +12,7 @@ type alias Model =
   , users : List User
   , repos : List Repo
   , route : Route
+  , current_user : String
   , client_info: Flags
   }
 
@@ -55,5 +56,6 @@ initialModel flags route =
   , repos = [
     ]
   , route = route
+  , current_user = ""
   , client_info = flags
   }

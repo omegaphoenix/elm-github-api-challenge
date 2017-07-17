@@ -21,3 +21,11 @@ parseLocation location =
       route
     Nothing ->
       NotFoundRoute
+
+usersPath : String
+usersPath =
+    "#users"
+
+reposPath : String
+reposPath =
+    "#repos"

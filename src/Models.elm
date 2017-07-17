@@ -31,18 +31,6 @@ type alias Flags =
   , client_secret : String
   }
 
-init : Flags -> ( Model, Cmd Msg )
-init flags =
-    ( { content = ""
-      , users = [
-        ]
-      , repos = [
-        ]
-      , route = UsersRoute
-      , client_info = flags
-      }
-      , Cmd.none )
-
 type Route
   = UsersRoute
   | ReposRoute String

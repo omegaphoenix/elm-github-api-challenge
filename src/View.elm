@@ -21,9 +21,9 @@ page model =
         SearchRoute ->
             render
         UsersRoute ->
-            renderUsers model.users
+            renderUsers model
         ReposRoute ->
-            renderRepos model.repos
+            renderRepos model
         NotFoundRoute ->
             notFoundView
 
@@ -41,10 +41,10 @@ render =
         , button [ onClick Submit ] [text "Submit"]
         ]
 
-renderUsers : List User -> Html Msg
-renderUsers users =
+renderUsers : Model -> Html Msg
+renderUsers model =
     div []
-        [ renderUsersHelper users
+        [ renderUsersHelper model.users
         , searchBtn
         , listReposBtn
         ]
@@ -58,10 +58,11 @@ renderUsersHelper users =
               []
           ) users)
 
-renderRepos : List Repo -> Html Msg
-renderRepos repos =
+renderRepos : Model -> Html Msg
+renderRepos model =
     div []
-        [ renderReposHelper repos
+        [ div [] [ text (model.current_user ++ "'s repos")]
+        , renderReposHelper model.repos
         , searchBtn
         , listUsersBtn
         ]
